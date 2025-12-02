@@ -32,15 +32,34 @@ Luego abre tu navegador en: **http://localhost:3000/qa-dashboard**
 
 ### Para Empezar
 -  **[QUICK_START.md](./QUICK_START.md)** - 90 segundos a dashboard ejecutando
--  **[MOCKDATAV0_BASE.md](./MOCKDATAV0_BASE.md)** -  Archivo base: 1,000 registros, flujo completo
 
-### Referencia de Datos
+### Referencia Técnica
 -  **[ARCHITECTURE.md](./ARCHITECTURE.md)** - Arquitectura SQLite/CSV completa
 -  **[DATA_MAPPING.md](./DATA_MAPPING.md)** - Flujo de datos y normalizaciones
 -  **[RANGOS_VALIDACION.md](./RANGOS_VALIDACION.md)** - Rangos de validación de métricas
--  **[RECOMENDACIONES_ESTRUCTURA.md](./RECOMENDACIONES_ESTRUCTURA.md)** - Motor de recomendaciones
+-  **[DATA_MANAGEMENT.md](./DATA_MANAGEMENT.md)** - Gestión de datos en profundidad
 
 ##  Funcionalidades
+
+### Gestión de Datos (Menú Opciones ⚙️)
+
+El dashboard incluye un sistema completo de gestión de datos accesible desde el botón "Opciones" en el header:
+
+**Cargar Nuevo Archivo**
+- Sube archivos CSV con el mismo formato que `MockDataV0.csv`
+- El sistema automáticamente normaliza y carga los datos a SQLite
+- Crea automáticamente un backup de la versión anterior
+- Válida la integridad de los datos antes de guardar
+
+**Cambiar Versión de Datos**
+- Ve entre versiones de datos cargadas
+- Cada versión guarda metadatos (fecha, cantidad de registros)
+- Los cambios se reflejan inmediatamente en el dashboard
+
+**Ver Historial de Versiones**
+- Muestra todas las versiones cargadas
+- Información de cada versión (fecha, cantidad de bugs, sprints)
+- Opción para revertir a cualquier versión anterior
 
 ### Resumen Ejecutivo
 - KPIs críticos de calidad
@@ -183,8 +202,12 @@ npm run db:verify
 - **Gráficos**: Chart.js, React-Chartjs-2
 - **Utilidades**: date-fns, Lucide React, Axios
 
-##  Cambios Recientes (v2.0  v2.1)
+##  Cambios Recientes (v2.1  v2.2)
 
+✅ Corrección de datos en "Hallazgos Críticos Detectados" (399 bugs críticos)  
+✅ Exclusión de "Sugerencias" en la métrica "Densidad de Hallazgos por Sprint"  
+✅ Eliminación de referencias a archivos específicos (nombres genéricos)  
+✅ Manejo elegante de archivos faltantes (sin errores ruidosos)  
  Migración de Excel a MockDataV0.csv  
  Refactorización completa a ES6 Modules  
  Conversión a SQLite (fuente única)  

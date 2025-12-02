@@ -2,7 +2,7 @@
 
 /**
  * Script de migración: Excel → SQLite (ES6 Module)
- * Lee Reporte_QA_V2.xlsx y carga datos en qa-dashboard.db
+ * Lee archivos Excel y carga datos en qa-dashboard.db
  */
 
 import ExcelJS from 'exceljs';
@@ -13,7 +13,7 @@ import fs from 'fs';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
-const excelPath = path.resolve(__dirname, '../data/Reporte_QA_V2.xlsx');
+const excelPath = path.resolve(__dirname, '../data/qa-data-upload.xlsx');
 const dbPath = path.resolve(__dirname, '../public/data/qa-dashboard.db');
 
 let processedVersions = 0;
@@ -23,6 +23,17 @@ async function migrateData() {
   console.log('🚀 Iniciando migración: Excel → SQLite\n');
 
   try {
+    // Verificar si el archivo Excel existe
+    if (!fs.existsSync(excelPath)) {
+      console.warn('⚠️ Advertencia: Archivo Excel no encontrado.');
+      console.warn(`📁 Ruta esperada: ${excelPath}`);
+      console.warn('\n💡 Para migrar datos desde Excel:');
+      console.warn('   1. Carga un archivo CSV o Excel a través del dashboard');
+      console.warn('   2. O coloca manualmente el archivo en la ruta especificada');
+      console.log('\n✅ Continuando con base de datos existente...\n');
+      return;
+    }
+
     // Abrir Excel
     const workbook = new ExcelJS.Workbook();
     await workbook.xlsx.readFile(excelPath);

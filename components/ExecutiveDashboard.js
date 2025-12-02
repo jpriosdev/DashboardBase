@@ -32,6 +32,7 @@ import QualityMetrics from './QualityMetrics';
 import DetailModal from './DetailModal';
 import SprintComparison from './SprintComparison';
 import ActionableRecommendations from './ActionableRecommendations';
+import SettingsMenu from './SettingsMenu';
 import { QADataProcessor } from '../utils/dataProcessor'; // Nueva importación
 
 export default function ExecutiveDashboard({ 
@@ -413,14 +414,10 @@ export default function ExecutiveDashboard({
                 </p>
               </div>
               
-              <button
-                onClick={handleRefresh}
-                disabled={currentLoading}
-                className="flex items-center px-4 py-2 bg-executive-600 text-white rounded-lg hover:bg-executive-700 disabled:opacity-50 transition-colors"
-              >
-                <RefreshCw className={`w-4 h-4 mr-2 ${currentLoading ? 'animate-spin' : ''}`} />
-                Actualizar
-              </button>
+              <SettingsMenu 
+                onRefresh={handleRefresh}
+                loading={currentLoading}
+              />
             </div>
           </div>
         </div>
@@ -646,19 +643,42 @@ function OverviewTab({ data, recommendations, config, setDetailModal, detailModa
     criticalBugsMasAlta = Math.round(criticalBugsTotal * 0.4);
     criticalBugsAlta = Math.round(criticalBugsTotal * 0.6);
   } else {
-    // Sin filtros: usar datos globales de bugsByPriority (238 bugs totales)
-    criticalBugsMasAlta = data.bugsByPriority?.['Más alta']?.count || 0;
-    criticalBugsAlta = data.bugsByPriority?.['Alta']?.count || 0;
-    criticalBugsPending = (data.bugsByPriority?.['Más alta']?.pending || 0) + (data.bugsByPriority?.['Alta']?.pending || 0);
+    // Sin filtros: usar datos globales de bugsByPriority (1000 bugs totales)
+    // Encontrar las claves correctas buscando por contenido (maneja caracteres especiales)
+    let masAltaKey = null;
+    let altaKey = null;
+    
+    // Buscar "Más alta" considerando variaciones de codificación
+    for (const key of Object.keys(data.bugsByPriority || {})) {
+      const lowerKey = key.toLowerCase();
+      if (lowerKey.includes('mas') || lowerKey.includes('maa') || lowerKey.includes('más')) {
+        if (lowerKey.includes('alta')) {
+          masAltaKey = key;
+        }
+      }
+      if (lowerKey === 'alta') {
+        altaKey = key;
+      }
+    }
+    
+    // Si no se encontró la clave, usar la más probable
+    if (!masAltaKey) {
+      const allKeys = Object.keys(data.bugsByPriority || {});
+      masAltaKey = allKeys.find(k => !k.toLowerCase().includes('baja') && !k.toLowerCase().includes('media') && k !== 'Alta') || 'Más Alta';
+    }
+    if (!altaKey) altaKey = 'Alta';
+    
+    criticalBugsMasAlta = data.bugsByPriority?.[masAltaKey]?.count || 0;
+    criticalBugsAlta = data.bugsByPriority?.[altaKey]?.count || 0;
+    criticalBugsPending = (data.bugsByPriority?.[masAltaKey]?.pending || 0) + (data.bugsByPriority?.[altaKey]?.pending || 0);
+    
     criticalBugsTotal = criticalBugsMasAlta + criticalBugsAlta;
     // Con filtro pero sin datos desglosados: calcular proporcionalmente
     const globalTotalBugs = summary.totalBugs || 1;
-    const globalCriticalPending = (data.bugsByPriority?.['Más alta']?.pending || 0) + (data.bugsByPriority?.['Alta']?.pending || 0);
-    const globalCriticalTotal = (data.bugsByPriority?.['Más alta']?.count || 0) + (data.bugsByPriority?.['Alta']?.count || 0);
-    const globalMasAlta = data.bugsByPriority?.['Más alta']?.count || 0;
-    const globalAlta = data.bugsByPriority?.['Alta']?.count || 0;
-    
-    // Calcular proporcionalmente según los bugs de los sprints filtrados
+    const globalCriticalPending = (data.bugsByPriority?.[masAltaKey]?.pending || 0) + (data.bugsByPriority?.[altaKey]?.pending || 0);
+    const globalCriticalTotal = (data.bugsByPriority?.[masAltaKey]?.count || 0) + (data.bugsByPriority?.[altaKey]?.count || 0);
+    const globalMasAlta = data.bugsByPriority?.[masAltaKey]?.count || 0;
+    const globalAlta = data.bugsByPriority?.[altaKey]?.count || 0;    // Calcular proporcionalmente según los bugs de los sprints filtrados
     const ratio = totalBugs / globalTotalBugs;
     criticalBugsMasAlta = Math.round(ratio * globalMasAlta);
     criticalBugsAlta = Math.round(ratio * globalAlta);
@@ -828,7 +848,7 @@ function OverviewTab({ data, recommendations, config, setDetailModal, detailModa
   const calculateDefectDensityPerSprint = () => {
     if (!filteredSprintData || filteredSprintData.length === 0) return { avg: 0, total: 0, max: 0, min: 0 };
     
-    // Usar datos reales de bugs por sprint
+    // Usar datos reales de bugs por sprint (excluye Sugerencias)
     const bugsPerSprint = filteredSprintData.map(s => s.bugs || 0);
     const totalBugsInSprints = bugsPerSprint.reduce((acc, bugs) => acc + bugs, 0);
     const avgBugsPerSprint = totalBugsInSprints / filteredSprintData.length;
@@ -1136,7 +1156,7 @@ function OverviewTab({ data, recommendations, config, setDetailModal, detailModa
           trend={defectDensityData.avg <= 20 ? 5 : -5}
           status={defectDensityData.avg <= 20 ? "success" : defectDensityData.avg <= 30 ? "warning" : "danger"}
           subtitle={`Máx: ${defectDensityData.max} | Mín: ${defectDensityData.min} hallazgos/sprint`}
-          formula={`Promedio = ${defectDensityData.total} hallazgos / ${defectDensityData.sprints} sprints`}
+          formula={`Media = ${defectDensityData.total} hallazgos / ${defectDensityData.sprints} sprints`}
           tooltip={
             <div>
               <div className="font-semibold text-sm text-gray-800 mb-1">Qué mide</div>

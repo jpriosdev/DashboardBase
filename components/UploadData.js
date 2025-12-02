@@ -5,6 +5,7 @@ import { useState, useRef, useEffect } from 'react';
  * Componente para carga de datos con normalización SQL/CSV
  * Validación mejorada, manejo de errores robusto
  */
+export default function UploadData() {
   const [running, setRunning] = useState(false);
   const [logs, setLogs] = useState([]);
   const [showSuccess, setShowSuccess] = useState(false);
@@ -33,8 +34,8 @@ import { useState, useRef, useEffect } from 'react';
     const base64 = await getBase64(file);
 
     // Upload
-    // Always save uploaded file as Reporte_QA_V2.xlsx so the app will prefer V2
-    const targetFilename = 'Reporte_QA_V2.xlsx';
+    // Guardar archivo cargado con nombre estándar para procesamiento
+    const targetFilename = 'qa-data-upload.xlsx';
     setLogs(l => [...l, `Uploading and saving as ${targetFilename}...`]);
     const resp = await fetch('/api/upload-data', {
       method: 'POST',

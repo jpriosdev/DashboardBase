@@ -7,6 +7,7 @@ import { Construction } from 'lucide-react';
  * Tarjeta placeholder para componentes en desarrollo
  * Mejorado: seguridad (typeof checks), tooltip mejorado, validación robusta
  */
+export default function UnderConstructionCard({
   title,
   value,
   icon,

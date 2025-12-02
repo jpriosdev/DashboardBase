@@ -140,30 +140,35 @@ export class QADataProcessor {
   }
 
   /**
-   * Calcular media de casos ejecutados por sprint (REFACTORIZADO)
-   * Robustez mejorada: validación de tipos, manejo de valores inválidos
-   * Estructura normalizada SQL/CSV con múltiples nombres de campos
+   * Calcular media de casos ejecutados por sprint
+   * 
+   * LÓGICA: 
+   * - Cada registro en MockDataV0.csv es un BUG reportado
+   * - Los casos ejecutados = cantidad de bugs encontrados (1000 casos, 1000 bugs)
+   * - Cada sprint tiene su propia cantidad de casos ejecutados en el campo testCases
    * 
    * @param {Array} sprintData - Array de datos de sprints
-   * @returns {number} Promedio redondeado (0 si no hay datos válidos)
+   * @returns {number} Promedio de casos ejecutados por sprint
    */
   static calculateAvgTestCasesPerSprint(sprintData) {
     if (!sprintData || !Array.isArray(sprintData) || sprintData.length === 0) return 0;
     
     const totalCases = sprintData.reduce((sum, sprint) => {
       // Mapear todos los posibles nombres de campo SQL/CSV
-      const cases = sprint.testCases 
+      let cases = sprint.testCases 
         || sprint.casosEjecutados 
         || sprint.casos_ejecutados 
         || sprint.test_cases 
         || sprint.test_executed
+        || sprint.total  // Fallback: usar bugs encontrados directamente
         || 0;
+      
       // Validar que sea un número finito válido
       const validCases = Number.isFinite(cases) ? Math.max(0, cases) : 0;
       return sum + validCases;
     }, 0);
     
-    // Evitar división por cero y redondear
+    // Calcular promedio y redondear
     const average = sprintData.length > 0 ? totalCases / sprintData.length : 0;
     return Math.round(average);
   }
@@ -194,7 +199,8 @@ export class QADataProcessor {
   static getCriticalBugsCount(data) {
     if (!data.bugsByPriority) return 0;
     
-    const criticalPriorities = ['Más alta', 'Alta', 'Critical', 'High'];
+    // Mapear todas las posibles etiquetas de prioridad crítica
+    const criticalPriorities = ['Más alta', 'Alta', 'Critical', 'High', 'Crítica'];
     return criticalPriorities.reduce((sum, priority) => {
       return sum + (data.bugsByPriority[priority]?.count || 0);
     }, 0);

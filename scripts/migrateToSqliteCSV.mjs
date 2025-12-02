@@ -2,7 +2,7 @@
 
 /**
  * Script de migración: CSV → SQLite (ES6 Module)
- * Lee MockDataV0.csv y carga datos en qa-dashboard.db
+ * Lee archivos CSV y carga datos en qa-dashboard.db
  */
 
 import sqlite3 from 'sqlite3';
@@ -22,6 +22,17 @@ async function migrateData() {
   console.log('🚀 Iniciando migración: CSV → SQLite\n');
 
   try {
+    // Verificar si el archivo CSV existe
+    if (!fs.existsSync(csvPath)) {
+      console.warn('⚠️ Advertencia: Archivo CSV no encontrado.');
+      console.warn(`📁 Ruta esperada: ${csvPath}`);
+      console.warn('\n💡 Para migrar datos desde CSV:');
+      console.warn('   1. Carga un archivo CSV a través del dashboard');
+      console.warn('   2. O coloca manualmente el archivo en la ruta especificada');
+      console.log('\n✅ Continuando con base de datos existente...\n');
+      return;
+    }
+
     // Leer CSV
     const csvContent = fs.readFileSync(csvPath, 'utf8');
     const records = parse(csvContent, {
@@ -70,6 +81,14 @@ async function migrateData() {
     );
 
     for (const row of records) {
+      // Encontrar dinámicamente el campo del sprint (por problemas de encoding)
+      let sprintValue = '';
+      Object.keys(row).forEach(key => {
+        if (key.toLowerCase().includes('sprint') && key.toLowerCase().includes('ejecuc')) {
+          sprintValue = row[key];
+        }
+      });
+      
       await bugStmt.run([
         row['Tipo de Incidencia'] || '',
         row['Clave de incidencia'] || '',
@@ -78,7 +97,7 @@ async function migrateData() {
         row['Parent summary'] || '',
         row['Prioridad'] || '',
         row['Estado'] || '',
-        row['Sprint de ejecución'] || '',
+        sprintValue || '',  // Usar valor dinámico del sprint
         row['Tipo de prueba'] || '',
         row['Atributo'] || '',
         row['Nivel de prueba'] || '',

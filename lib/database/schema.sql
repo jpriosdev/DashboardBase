@@ -1,6 +1,6 @@
 -- ============================================================================
 -- SCHEMA SQLite - QA Dashboard
--- Basado en estructura de Reporte_QA_V2.xlsx (Reporte_Gral + Versiones)
+-- Basado en estructura de datos cargados (bugs y versiones)
 -- 
 -- 3 TABLAS REALES + VISTAS PARA AGREGACIONES
 -- ============================================================================
@@ -146,6 +146,7 @@ SELECT
   SUM(CASE WHEN estado = 'Tareas por hacer' THEN 1 ELSE 0 END) as pending,
   SUM(CASE WHEN estado = 'Cancelado' THEN 1 ELSE 0 END) as canceled
 FROM bugs_detail
+WHERE tipo_incidencia != 'Sugerencia'
 GROUP BY sprint;
 
 -- Vista: Bugs por estado en cada sprint
