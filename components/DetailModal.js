@@ -351,7 +351,7 @@ export default function DetailModal({ modal, onClose, recommendations }) {
       return (
         <div className="bg-yellow-50 p-4 rounded-lg border border-yellow-200">
           <p className="text-sm text-yellow-800">
-            <strong>Nota:</strong> {label} requiere múltiples sprints para mostrar tendencia. Selecciona más sprints en el filtro.
+            <strong>Nota:</strong> {label} requiere múltiples sprints para mostrar tendencia. Sprints disponibles: {sprints?.length || 0}
           </p>
         </div>
       );
@@ -456,6 +456,8 @@ export default function DetailModal({ modal, onClose, recommendations }) {
           type: 'linear',
           display: true,
           position: 'left',
+          beginAtZero: true,
+          min: 0,
           title: {
             display: true,
             text: yAxisLabel,
@@ -472,6 +474,7 @@ export default function DetailModal({ modal, onClose, recommendations }) {
             font: {
               size: 11
             },
+            stepSize: 1,
             callback: function(value) {
               return isPercentage ? `${value}%` : value;
             }
@@ -1830,11 +1833,26 @@ export default function DetailModal({ modal, onClose, recommendations }) {
             <svg width="220" height="220" viewBox="0 0 220 220" className="mx-auto">
               {(() => {
                 const priorities = data.allPriorities || {};
-                const masAlta = priorities['Más alta']?.count || 0;
-                const alta = priorities['Alta']?.count || 0;
-                const media = priorities['Media']?.count || 0;
-                const baja = priorities['Baja']?.count || 0;
-                const masBaja = priorities['Más baja']?.count || 0;
+                
+                // Función para buscar clave con normalización
+                const findKey = (searchTerm) => {
+                  const normalized = searchTerm.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+                  return Object.keys(priorities).find(key => 
+                    key.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '') === normalized
+                  ) || searchTerm;
+                };
+                
+                const masAltaKey = findKey('Más Alta');
+                const altaKey = findKey('Alta');
+                const mediaKey = findKey('Media');
+                const bajaKey = findKey('Baja');
+                const masBajaKey = findKey('Más Baja');
+                
+                const masAlta = priorities[masAltaKey]?.count || 0;
+                const alta = priorities[altaKey]?.count || 0;
+                const media = priorities[mediaKey]?.count || 0;
+                const baja = priorities[bajaKey]?.count || 0;
+                const masBaja = priorities[masBajaKey]?.count || 0;
                 const total = masAlta + alta + media + baja + masBaja || 1;
                 
                 const colors = {
@@ -1925,12 +1943,27 @@ export default function DetailModal({ modal, onClose, recommendations }) {
           <div className="flex-1 space-y-2">
             {(() => {
               const priorities = data.allPriorities || {};
+              
+              // Función para buscar clave con normalización
+              const findKey = (searchTerm) => {
+                const normalized = searchTerm.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+                return Object.keys(priorities).find(key => 
+                  key.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '') === normalized
+                ) || searchTerm;
+              };
+              
+              const masAltaKey = findKey('Más Alta');
+              const altaKey = findKey('Alta');
+              const mediaKey = findKey('Media');
+              const bajaKey = findKey('Baja');
+              const masBajaKey = findKey('Más Baja');
+              
               const items = [
-                { label: 'Más alta', value: priorities['Más alta']?.count || 0, color: '#dc2626', bgColor: 'bg-red-50', textColor: 'text-red-700' },
-                { label: 'Alta', value: priorities['Alta']?.count || 0, color: '#f97316', bgColor: 'bg-orange-50', textColor: 'text-orange-700' },
-                { label: 'Media', value: priorities['Media']?.count || 0, color: '#3b82f6', bgColor: 'bg-blue-50', textColor: 'text-blue-700' },
-                { label: 'Baja', value: priorities['Baja']?.count || 0, color: '#a3a3a3', bgColor: 'bg-gray-50', textColor: 'text-gray-700' },
-                { label: 'Más baja', value: priorities['Más baja']?.count || 0, color: '#d4d4d4', bgColor: 'bg-gray-50', textColor: 'text-gray-600' }
+                { label: 'Más alta', value: priorities[masAltaKey]?.count || 0, color: '#dc2626', bgColor: 'bg-red-50', textColor: 'text-red-700' },
+                { label: 'Alta', value: priorities[altaKey]?.count || 0, color: '#f97316', bgColor: 'bg-orange-50', textColor: 'text-orange-700' },
+                { label: 'Media', value: priorities[mediaKey]?.count || 0, color: '#3b82f6', bgColor: 'bg-blue-50', textColor: 'text-blue-700' },
+                { label: 'Baja', value: priorities[bajaKey]?.count || 0, color: '#a3a3a3', bgColor: 'bg-gray-50', textColor: 'text-gray-700' },
+                { label: 'Más baja', value: priorities[masBajaKey]?.count || 0, color: '#d4d4d4', bgColor: 'bg-gray-50', textColor: 'text-gray-600' }
               ];
               
               const total = items.reduce((sum, item) => sum + item.value, 0) || 1;
@@ -2045,10 +2078,22 @@ export default function DetailModal({ modal, onClose, recommendations }) {
 
   const renderCriticalBugsStatusDetail = (data) => {
     const priorities = data.allPriorities || {};
-    const masAltaPending = priorities['Más alta']?.pending || 0;
-    const masAltaResolved = priorities['Más alta']?.resolved || 0;
-    const altaPending = priorities['Alta']?.pending || 0;
-    const altaResolved = priorities['Alta']?.resolved || 0;
+    
+    // Función para buscar clave con normalización
+    const findKey = (searchTerm) => {
+      const normalized = searchTerm.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+      return Object.keys(priorities).find(key => 
+        key.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '') === normalized
+      ) || searchTerm;
+    };
+    
+    const masAltaKey = findKey('Más Alta');
+    const altaKey = findKey('Alta');
+    
+    const masAltaPending = priorities[masAltaKey]?.pending || 0;
+    const masAltaResolved = (priorities[masAltaKey]?.resolved || 0);
+    const altaPending = priorities[altaKey]?.pending || 0;
+    const altaResolved = (priorities[altaKey]?.resolved || 0);
     
     return (
     <div className="space-y-6">
@@ -2262,43 +2307,46 @@ export default function DetailModal({ modal, onClose, recommendations }) {
         </div>
       </div>
       
-      {/* Gráfico de tendencia con líneas separadas para Más alta y Alta */}
+      {/* Gráfico de tendencia con líneas separadas por estado: Tareas por hacer, En progreso, Reabierto + Pendiente */}
       {(() => {
-        const masAltaPendingData = sprints ? sprints.map(sprint => {
-          if (sprint.criticalBugsMasAltaPending !== undefined) return sprint.criticalBugsMasAltaPending;
-          const sprintBugs = sprint.bugs || 0;
-          const masAltaTotal = Math.round(sprintBugs * 0.05);
-          const pendingRate = sprint.bugsPending / (sprint.bugs || 1);
-          return Math.round(masAltaTotal * pendingRate);
-        }) : [];
+        const tareasPorHacerData = sprints ? sprints.map(sprint => sprint.criticalBugsByState?.tareasPorHacer || 0) : [];
+        const enProgresoData = sprints ? sprints.map(sprint => sprint.criticalBugsByState?.enProgreso || 0) : [];
+        const reabiertosData = sprints ? sprints.map(sprint => sprint.criticalBugsByState?.reabierto || 0) : [];
         
-        const altaPendingData = sprints ? sprints.map(sprint => {
-          if (sprint.criticalBugsAltaPending !== undefined) return sprint.criticalBugsAltaPending;
-          const sprintBugs = sprint.bugs || 0;
-          const altaTotal = Math.round(sprintBugs * 0.30);
-          const pendingRate = sprint.bugsPending / (sprint.bugs || 1);
-          return Math.round(altaTotal * pendingRate);
+        // Calcular pendiente total (suma de los 3 estados)
+        const pendienteData = sprints ? sprints.map((sprint, idx) => {
+          return (tareasPorHacerData[idx] || 0) + (enProgresoData[idx] || 0) + (reabiertosData[idx] || 0);
         }) : [];
         
         const datasets = [
           {
-            label: 'Más alta',
-            data: masAltaPendingData,
+            label: 'Pendiente (Total)',
+            data: pendienteData,
+            color: '#8b5cf6'
+          },
+          {
+            label: 'Tareas por hacer',
+            data: tareasPorHacerData,
             color: '#dc2626'
           },
           {
-            label: 'Alta',
-            data: altaPendingData,
+            label: 'En progreso',
+            data: enProgresoData,
             color: '#f97316'
+          },
+          {
+            label: 'Reabierto',
+            data: reabiertosData,
+            color: '#eab308'
           }
         ];
         
         return (
           <TrendChartMultiple 
             datasets={datasets} 
-            label="Evolución de Bugs Críticos Pendientes por Sprint" 
+            label="Evolución de Hallazgos Críticos Pendientes por Sprint" 
             sprints={sprints} 
-            yAxisLabel="Bugs Pendientes" 
+            yAxisLabel="Hallazgos Críticos Pendientes" 
           />
         );
       })()}

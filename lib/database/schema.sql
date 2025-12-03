@@ -174,10 +174,11 @@ CREATE VIEW IF NOT EXISTS vw_bugs_by_priority AS
 SELECT 
   prioridad,
   COUNT(*) as count,
-  SUM(CASE WHEN estado = 'Tareas por hacer' THEN 1 ELSE 0 END) as pending,
-  SUM(CASE WHEN estado = 'Cancelado' THEN 1 ELSE 0 END) as canceled
+  SUM(CASE WHEN estado IN ('Tareas por hacer', 'En progreso', 'Reabierto') THEN 1 ELSE 0 END) as pending,
+  SUM(CASE WHEN estado = 'Cancelado' THEN 1 ELSE 0 END) as canceled,
+  SUM(CASE WHEN estado NOT IN ('Tareas por hacer', 'En progreso', 'Reabierto', 'Cancelado') THEN 1 ELSE 0 END) as resolved
 FROM bugs_detail
-WHERE prioridad IS NOT NULL
+WHERE prioridad IS NOT NULL AND tipo_incidencia != 'Sugerencia'
 GROUP BY prioridad;
 
 -- Vista: Bugs por módulo

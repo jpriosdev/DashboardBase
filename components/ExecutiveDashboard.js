@@ -643,47 +643,44 @@ function OverviewTab({ data, recommendations, config, setDetailModal, detailModa
     criticalBugsMasAlta = Math.round(criticalBugsTotal * 0.4);
     criticalBugsAlta = Math.round(criticalBugsTotal * 0.6);
   } else {
-    // Sin filtros: usar datos globales de bugsByPriority (1000 bugs totales)
-    // Encontrar las claves correctas buscando por contenido (maneja caracteres especiales)
-    let masAltaKey = null;
-    let altaKey = null;
-    
-    // Buscar "Más alta" considerando variaciones de codificación
-    for (const key of Object.keys(data.bugsByPriority || {})) {
-      const lowerKey = key.toLowerCase();
-      if (lowerKey.includes('mas') || lowerKey.includes('maa') || lowerKey.includes('más')) {
-        if (lowerKey.includes('alta')) {
-          masAltaKey = key;
+    // Sin filtros: usar datos globales de bugsByPriority
+    if (!data.bugsByPriority || Object.keys(data.bugsByPriority).length === 0) {
+      // Si no hay datos, usar 0
+      criticalBugsMasAlta = 0;
+      criticalBugsAlta = 0;
+      criticalBugsPending = 0;
+      criticalBugsTotal = 0;
+    } else {
+      // Encontrar las claves correctas buscando por contenido (maneja caracteres especiales)
+      let masAltaKey = null;
+      let altaKey = null;
+      
+      // Buscar "Más alta" considerando variaciones de codificación
+      for (const key of Object.keys(data.bugsByPriority || {})) {
+        const lowerKey = key.toLowerCase();
+        if (lowerKey.includes('mas') || lowerKey.includes('maa') || lowerKey.includes('más')) {
+          if (lowerKey.includes('alta')) {
+            masAltaKey = key;
+          }
+        }
+        if (lowerKey === 'alta') {
+          altaKey = key;
         }
       }
-      if (lowerKey === 'alta') {
-        altaKey = key;
+      
+      // Si no se encontró la clave, usar la más probable
+      if (!masAltaKey) {
+        const allKeys = Object.keys(data.bugsByPriority || {});
+        masAltaKey = allKeys.find(k => !k.toLowerCase().includes('baja') && !k.toLowerCase().includes('media') && k !== 'Alta') || 'Más Alta';
       }
+      if (!altaKey) altaKey = 'Alta';
+      
+      criticalBugsMasAlta = data.bugsByPriority?.[masAltaKey]?.count || 0;
+      criticalBugsAlta = data.bugsByPriority?.[altaKey]?.count || 0;
+      criticalBugsPending = ((data.bugsByPriority?.[masAltaKey]?.pending || 0) + (data.bugsByPriority?.[altaKey]?.pending || 0)) || 0;
+      
+      criticalBugsTotal = (criticalBugsMasAlta || 0) + (criticalBugsAlta || 0);
     }
-    
-    // Si no se encontró la clave, usar la más probable
-    if (!masAltaKey) {
-      const allKeys = Object.keys(data.bugsByPriority || {});
-      masAltaKey = allKeys.find(k => !k.toLowerCase().includes('baja') && !k.toLowerCase().includes('media') && k !== 'Alta') || 'Más Alta';
-    }
-    if (!altaKey) altaKey = 'Alta';
-    
-    criticalBugsMasAlta = data.bugsByPriority?.[masAltaKey]?.count || 0;
-    criticalBugsAlta = data.bugsByPriority?.[altaKey]?.count || 0;
-    criticalBugsPending = (data.bugsByPriority?.[masAltaKey]?.pending || 0) + (data.bugsByPriority?.[altaKey]?.pending || 0);
-    
-    criticalBugsTotal = criticalBugsMasAlta + criticalBugsAlta;
-    // Con filtro pero sin datos desglosados: calcular proporcionalmente
-    const globalTotalBugs = summary.totalBugs || 1;
-    const globalCriticalPending = (data.bugsByPriority?.[masAltaKey]?.pending || 0) + (data.bugsByPriority?.[altaKey]?.pending || 0);
-    const globalCriticalTotal = (data.bugsByPriority?.[masAltaKey]?.count || 0) + (data.bugsByPriority?.[altaKey]?.count || 0);
-    const globalMasAlta = data.bugsByPriority?.[masAltaKey]?.count || 0;
-    const globalAlta = data.bugsByPriority?.[altaKey]?.count || 0;    // Calcular proporcionalmente según los bugs de los sprints filtrados
-    const ratio = totalBugs / globalTotalBugs;
-    criticalBugsMasAlta = Math.round(ratio * globalMasAlta);
-    criticalBugsAlta = Math.round(ratio * globalAlta);
-    criticalBugsPending = Math.round(ratio * globalCriticalPending);
-    criticalBugsTotal = criticalBugsMasAlta + criticalBugsAlta;
   }
   
   const avgTestCasesPerSprint = filteredSprintData && filteredSprintData.length > 0
@@ -1177,10 +1174,10 @@ function OverviewTab({ data, recommendations, config, setDetailModal, detailModa
         )}
         
         {/* 3. TASA DE EJECUCIÓN - UNDER CONSTRUCTION */}
-        {kpis.testExecutionRate && isKpiVisible('testExecutionRate') && (
+        {isKpiVisible('testExecutionRate') && (
           <UnderConstructionCard
             title="Tasa de Ejecución"
-            value={`${kpis.testExecutionRate}%`}
+            value={`${kpis.testExecutionRate || 0}%`}
             icon={<Activity className="w-6 h-6 text-blue-600" />}
             subtitle="Pruebas ejecutadas vs planeadas"
             onClick={() => setDetailModal({
