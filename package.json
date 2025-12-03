@@ -5,7 +5,7 @@
     "scripts": {
         "generate-json": "node scripts/generateQAJson.js",
         "dev": "next dev",
-        "build": "next build",
+        "build": "npm run generate-json && next build",
         "start": "next start",
         "lint": "next lint",
         "db:init": "node lib/database/init.mjs",
